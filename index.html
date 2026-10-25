@@ -122,7 +122,8 @@ function lockUI(msg){
     let r=null; try{r=await call('login',req)}catch(e){err.textContent='通信できませんでした（'+String(e&&e.message||e).slice(0,120)+'）';btn.disabled=false;return}
     if(!r.ok){err.textContent=r.msg;btn.disabled=false;if(/パスワードを決めてある/.test(r.msg)){MODE='pass';lockUI(r.msg)}return}
     ls.set(TOKKEY,r.token); HASPASS=!!r.hasPass;
-    if(MODE==='code'&&!r.hasPass)return passUI(r.token,r.me,true);
+    // パスワードを決める画面は、メンバー表の「パスワード不要」にチェックがない人だけに出す
+    if(MODE==='code'&&(r.askPass!==undefined?r.askPass:!r.hasPass))return passUI(r.token,r.me,true);
     boot(r.token,r.me);
   });
 }
