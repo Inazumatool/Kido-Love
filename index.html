@@ -65,7 +65,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,5vw,28px);l
 /* ↓ ウェブアプリのURL（Apps Script の「デプロイを管理」でコピーしたもの） */
 /* ===== 入口：ログイン → 本体を受け取って起動（試練ツールと同じ仕組み） ===== */
 (function(){
-const API_URL="https://inazumatool.github.io/Kido-Love/";
+const API_URL="https://script.google.com/macros/s/AKfycbyOEHCLp2PCssm4lHKkn7JZkFPbnEkGS0Y7IS3QpMjGH_aogeMQuuCS-La_9VIb8ZwW/exec";
 const DEVKEY='inazuma-match-dev', TOKKEY='inazuma-match-session';
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 const $=id=>document.getElementById(id);
