@@ -128,13 +128,13 @@ function lockUI(msg){
     if(MODE==='code'){req.code=$('lockCode').value;if(!req.code.trim()){err.textContent='メンバーコードを入れてください。';return}}
     else{req.id=$('lockId').value;req.pass=$('lockPass').value;if(!req.id||!req.pass){err.textContent='ゲームIDとパスワードを入れてください。';return}}
     err.textContent='確認中…'; btn.disabled=true;
-    req.geo=await geo();
+    req.geo=await geoQuick(1500); req.app=true;   // 地域は1.5秒まで待つ。本体も一緒にもらう
     let r=null; try{r=await call('login',req)}catch(e){err.textContent='通信できませんでした（'+String(e&&e.message||e).slice(0,120)+'）';btn.disabled=false;return}
     if(!r.ok){err.textContent=r.msg;btn.disabled=false;if(/パスワードを決めてある/.test(r.msg)){MODE='pass';lockUI(r.msg)}return}
     ls.set(TOKKEY,r.token); HASPASS=!!r.hasPass;
     // パスワードを決める画面は、メンバー表の「パスワード不要」にチェックがない人だけに出す
     if(MODE==='code'&&(r.askPass!==undefined?r.askPass:!r.hasPass))return passUI(r.token,r.me,true);
-    boot(r.token,r.me);
+    boot(r.token,r.me,r.app);
   });
 }
 
@@ -183,9 +183,10 @@ function kicked(r){
 function toast(t){const d=document.createElement('div');d.className='gtoast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
 
 /* ===== 本体を起動 ===== */
-async function boot(token,me){
+async function boot(token,me,pre){
   loading('読み込み中…（はじめは数秒かかります）');
-  let a=null; try{a=await call('loadApp',token)}catch(e){lockUI('読み込みに失敗しました（'+String(e&&e.message||e).slice(0,200)+'）');return}
+  let a=pre||null;
+  if(!a){try{a=await call('loadApp',token)}catch(e){lockUI('読み込みに失敗しました（'+String(e&&e.message||e).slice(0,200)+'）');return}}
   if(!a.ok){if(a.reason==='error'){lockUI(a.msg);return}return kicked(a)}
   TOKEN=token; TIMER=setInterval(check,5*60*1000);
   let P=null; try{P=JSON.parse(new TextDecoder().decode(new Uint8Array(await new Response(new Blob([Uint8Array.from(atob(a.pack),c=>c.charCodeAt(0))]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())))}catch(e){lockUI('本体を開けませんでした（'+esc(e&&e.message||e)+'）');return}
@@ -218,9 +219,9 @@ async function start(){
   const tok=ls.get(TOKKEY);
   if(!tok){lockUI('');return}
   loading('ログインを確認しています…');
-  let r=null; try{r=await call('resume',tok,DEV,UA(),await geoQuick(1200))}catch(e){lockUI('通信できませんでした（'+String(e&&e.message||e).slice(0,120)+'）');return}
+  let r=null; try{r=await call('resume',tok,DEV,UA(),await geoQuick(1200),true)}catch(e){lockUI('通信できませんでした（'+String(e&&e.message||e).slice(0,120)+'）');return}
   if(!r.ok){ls.del(TOKKEY);return lockUI(r.reason==='kicked'?'別の端末でログインされたので、この端末はログアウトしました。':r.msg||'')}
-  HASPASS=!!r.hasPass; boot(tok,r.me);
+  HASPASS=!!r.hasPass; boot(tok,r.me,r.app);
 }
 start();
 })();
