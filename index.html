@@ -90,6 +90,8 @@ async function geo(){
   return GEO;
 }
 geo();
+/* 地域の問い合わせが遅いときは待ちすぎない（再開のとき） */
+const geoQuick=ms=>Promise.race([geo(),new Promise(r=>setTimeout(()=>r(GEO||{}),ms))]);
 
 /* 画面の出し分け */
 function showOnly(id){['loading','lockScreen','appWrap'].forEach(x=>{const e=$(x);if(e)e.hidden=(x!==id)});const wm=document.querySelector('.wmark');if(wm)wm.hidden=(id!=='appWrap')}
@@ -208,7 +210,7 @@ async function start(){
   const tok=ls.get(TOKKEY);
   if(!tok){lockUI('');return}
   loading('ログインを確認しています…');
-  let r=null; try{r=await call('resume',tok,DEV,UA(),await geo())}catch(e){lockUI('通信できませんでした（'+String(e&&e.message||e).slice(0,120)+'）');return}
+  let r=null; try{r=await call('resume',tok,DEV,UA(),await geoQuick(1200))}catch(e){lockUI('通信できませんでした（'+String(e&&e.message||e).slice(0,120)+'）');return}
   if(!r.ok){ls.del(TOKKEY);return lockUI(r.reason==='kicked'?'別の端末でログインされたので、この端末はログアウトしました。':r.msg||'')}
   HASPASS=!!r.hasPass; boot(tok,r.me);
 }
