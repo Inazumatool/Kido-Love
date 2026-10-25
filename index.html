@@ -65,7 +65,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,5vw,28px);l
 /* ↓ ウェブアプリのURL（Apps Script の「デプロイを管理」でコピーしたもの） */
 /* ===== 入口：ログイン → 本体を受け取って起動（試練ツールと同じ仕組み） ===== */
 (function(){
-const API_URL="https://script.google.com/macros/s/AKfycbyOEHCLp2PCssm4lHKkn7JZkFPbnEkGS0Y7IS3QpMjGH_aogeMQuuCS-La_9VIb8ZwW/exec";
+const API_URL="ここにウェブアプリのURLを貼る";
 const DEVKEY='inazuma-match-dev', TOKKEY='inazuma-match-session';
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 const $=id=>document.getElementById(id);
@@ -162,8 +162,10 @@ window.addEventListener('focus',()=>check(true));
 document.addEventListener('pointerdown',()=>check(false),{passive:true});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')check(true)});
 
+/* 端末に覚えた画像を消す（ログアウト・追い出し・停止のとき） */
+function clearImgs(){try{indexedDB.deleteDatabase('inazuma-match-img')}catch(e){}}
 function kicked(r){
-  stopCheck(); ls.del(TOKKEY);
+  stopCheck(); ls.del(TOKKEY); clearImgs();
   const msg=r&&r.reason==='kicked'?'別の端末でログインされたので、この端末はログアウトしました。':r&&r.msg?r.msg:'ログインの期限が切れました。もう一度ログインしてください。';
   lockUI(msg);
 }
@@ -192,7 +194,7 @@ function mark(token,me){
   const t=document.createElement('span'); t.textContent=me.master?'マスターキー':(me.name||'メンバー')+' さん（No.'+no2+'）';
   const p=document.createElement('button'); p.type='button'; p.textContent='パスワード'; p.addEventListener('click',()=>passUI(token,me,false));
   const x=document.createElement('button'); x.type='button'; x.textContent='ログアウト';
-  x.addEventListener('click',async()=>{try{await call('logout',token)}catch(e){}stopCheck();ls.del(TOKKEY);lockUI('ログアウトしました。')});
+  x.addEventListener('click',async()=>{try{await call('logout',token)}catch(e){}stopCheck();ls.del(TOKKEY);clearImgs();lockUI('ログアウトしました。')});
   b.append(t,p,x); h.parentElement.appendChild(b);
   if(!me.master){const old=document.querySelector('.wmark');if(old)old.remove();
     const w=document.createElement('div'); w.className='wmark'; w.setAttribute('aria-hidden','true');
